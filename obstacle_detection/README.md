@@ -56,7 +56,7 @@ Here’s how to connect the HC-SR04 sensor to the ESP32:
 ---
 
 ## **Files**
-- **ESP32 Code**: `esp32_ultrasonic_mqtt.py`  
+- **ESP32 Code**: `main.py`  
   - Reads distance data and publishes it to the MQTT broker.
 - **Python MQTT Client**: `mqtt_subscriber.py`  
   - Subscribes to the MQTT topic and saves data to `data.json`.
@@ -67,6 +67,10 @@ Here’s how to connect the HC-SR04 sensor to the ESP32:
 
 ## **Demo**
 Check out the **video demo** to see the system in action!
+
+
+https://github.com/user-attachments/assets/7c877fd4-8e14-49c8-b5f6-8e2ca54877cb
+
 
 ---
 
