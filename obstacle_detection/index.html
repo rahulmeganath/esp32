@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Ultrasonic Sensor Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .data-section, .chart-section, .info-section {
+            margin-bottom: 30px;
+        }
+        .data-section p {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        .status {
+            font-weight: bold;
+        }
+        .danger {
+            color: red;
+        }
+        .warning {
+            color: orange;
+        }
+        .normal {
+            color: green;
+        }
+        .info-section {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .info-section h2 {
+            margin-top: 0;
+        }
+    </style>
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <h1>ESP32 Ultrasonic Sensor Dashboard</h1>
+
+        <!-- Data Section -->
+        <div class="data-section">
+            <h2>Live Data</h2>
+            <p>Distance: <span id="distance">--</span> cm</p>
+            <p>Status: <span id="status" class="status">--</span></p>
+            <p>Timestamp: <span id="timestamp">--</span></p>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-section">
+            <h2>Distance Over Time</h2>
+            <canvas id="distanceChart"></canvas>
+        </div>
+
+        <!-- Info Section -->
+        <div class="info-section">
+            <h2>MQTT Information</h2>
+            <p><strong>Topic:</strong> <code>esp32/ultrasonic</code></p>
+            <p><strong>Data Format:</strong></p>
+            <pre>
+{
+  "distance_cm": 25,
+  "status": "warning",
+  "timestamp": "2023-10-25 14:30:45"
+}</pre>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Chart
+        const ctx = document.getElementById('distanceChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // Timestamps
+                datasets: [{
+                    label: 'Distance (cm)',
+                    data: [], // Distance values
+                    borderColor: '#007bff',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Distance (cm)'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Function to fetch and update data
+        async function fetchData() {
+            try {
+                const response = await fetch('/data.json');
+                const data = await response.json();
+
+                // Update the DOM
+                document.getElementById('distance').textContent = data.distance_cm;
+                document.getElementById('timestamp').textContent = data.timestamp;
+
+                // Update status with color coding
+                const statusElement = document.getElementById('status');
+                statusElement.textContent = data.status;
+                statusElement.className = `status ${data.status}`;
+
+                // Update the chart
+                chart.data.labels.push(data.timestamp);
+                chart.data.datasets[0].data.push(data.distance_cm);
+
+                // Keep only the last 10 data points
+                if (chart.data.labels.length > 10) {
+                    chart.data.labels.shift();
+                    chart.data.datasets[0].data.shift();
+                }
+
+                chart.update();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // Fetch data every 2 seconds
+        setInterval(fetchData, 2000);
+
+        // Initial fetch
+        fetchData();
+    </script>
+</body>
+</html>
